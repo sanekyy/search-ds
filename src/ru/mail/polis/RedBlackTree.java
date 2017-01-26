@@ -1,244 +1,95 @@
 package ru.mail.polis;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
-
-import static ru.mail.polis.RedBlackTree.Colors.BLACK;
-import static ru.mail.polis.RedBlackTree.Colors.RED;
+import java.util.*;
 
 //TODO: write code here
 public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
 
-    enum Colors{
-        RED, BLACK;
-    }
-
     class Node {
-        E value;
-        Colors color;
-        Node parent;
-        Node left;
-        Node right;
 
         Node(E value) {
             this.value = value;
-            parent=nil;
-            left=nil;
-            right=nil;
-            color=BLACK;
+            this.isRed = true;
         }
 
+        Node(boolean color) {
+            this.isRed = color;
+        }
+
+        E value;
+        boolean isRed;
+        Node parent;
+        Node left;
+        Node right;
 
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("N{");
             sb.append("d=").append(value);
+            if (parent != null) {
+                sb.append(", p=").append(parent);
+            }
             if (left != null) {
                 sb.append(", l=").append(left);
             }
             if (right != null) {
                 sb.append(", r=").append(right);
             }
+            if (isRed == true) {
+                sb.append(", c=").append("red");
+            } else if (isRed == false) {
+                sb.append(", c=").append("black");
+            }
             sb.append('}');
             return sb.toString();
         }
     }
-    private Node root;
-    private Node nil;
+
     private int size;
+    private Node root;
+    private Node NIL = new Node(false);
     private final Comparator<E> comparator;
 
     public RedBlackTree() {
         this.comparator = null;
-        nil=new Node(null);
-        nil.parent=null;
-        nil.left=null;
-        nil.right=null;
-        nil.color=BLACK;
     }
 
     public RedBlackTree(Comparator<E> comparator) {
         this.comparator = comparator;
     }
 
-    private Node TreeMinimum(Node x){
-        while(x.left!=nil)
-            x=x.left;
-        return x;
-    }
-
-    private void LeftRotate(Node x){
-        Node y=x.right;
-        x.right=y.left;
-        if(y.left!=nil)
-            y.left.parent=x;
-        y.parent=x.parent;
-        if(x.parent==nil)
-            this.root=y;
-        else if(x==x.parent.left)
-            x.parent.left=y;
-        else x.parent.right=y;
-        y.left=x;
-        x.parent=y;
-    }
-
-    private void RightRotate(Node x){
-        Node y=x.left;
-        int s;
-        x.left=y.right;
-        if(y.right!=nil)
-            y.right.parent = x;
-        y.parent=x.parent;
-        if(x.parent==nil)
-            this.root=y;
-        else if(x==x.parent.right)
-            x.parent.right=y;
-        else x.parent.left=y;
-        y.right=x;
-        x.parent=y;
-    }
-
-    private void RBInsertFixup(Node z){
-        while(z.parent.color==RED){
-            if(z.parent==z.parent.parent.left){
-                Node y=z.parent.parent.right;
-                if(y.color==RED){
-                    z.parent.color=BLACK;
-                    y.color=BLACK;
-                    z.parent.parent.color=RED;
-                    z=z.parent.parent;
-                } else if(z==z.parent.right){
-                    z=z.parent;
-                    LeftRotate(z);
-                }
-                if(z!=nil && z!=null)
-                    z.parent.color=BLACK;
-                if(z.parent.parent!=nil && z.parent.parent!=null) {
-                    z.parent.parent.color = RED;
-                    RightRotate(z.parent.parent);
-                }
-            } else {
-                Node y=z.parent.parent.left;
-                if(y.color==RED){
-                    z.parent.color=BLACK;
-                    y.color=BLACK;
-                    z.parent.parent.color=RED;
-                    z=z.parent.parent;
-                } else if(z==z.parent.left){
-                    z=z.parent;
-                    RightRotate(z);
-                }
-                if(z!=nil && z!=null)
-                    z.parent.color=BLACK;
-                if(z.parent.parent!=nil && z.parent.parent!=null) {
-                    z.parent.parent.color = RED;
-                    LeftRotate(z.parent.parent);
-                }
-            }
-        }
-        this.root.color=BLACK;
-    }
-
-    private void RBTransplant(Node u, Node v){
-        if(u.parent==nil)
-            this.root=v;
-        else if(u==u.parent.left)
-            u.parent.left=v;
-        else
-            u.parent.right=v;
-        v.parent=u.parent;
-    }
-
-    private void RBDeleteFixup(Node x){
-        while((x!=this.root) && (x.color==BLACK)){
-            if(x==x.parent.left){
-                Node w=x.parent.right;
-                if(w.color==RED){
-                    w.color=BLACK;
-                    x.parent.color=RED;
-                    LeftRotate(x.parent);
-                    w=x.parent.right;
-                }
-                if((w.left.color==BLACK) && (w.right.color==BLACK)){
-                    w.color=RED;
-                    x=x.parent;
-                } else if(w.right.color==BLACK) {
-                    w.right.color = BLACK;
-                    w.color = RED;
-                    RightRotate(w);
-                    w = x.parent.right;
-                }
-                w.color=x.parent.color;
-                x.parent.color=BLACK;
-                w.right.color=BLACK;
-                LeftRotate(x.parent);
-                x=this.root;
-            } else{
-                Node w=x.parent.left;
-                if(w.color==RED){
-                    w.color=BLACK;
-                    x.parent.color=RED;
-                    RightRotate(x.parent);
-                    w=x.parent.left;
-                }
-                if((w.right.color==BLACK) && (w.left.color==BLACK)){
-                    w.color=RED;
-                    x=x.parent;
-                } else if(w.left.color==BLACK) {
-                    w.left.color = BLACK;
-                    w.color = RED;
-                    RightRotate(w);
-                    w = x.parent.left;
-                }
-                w.color=x.parent.color;
-                x.parent.color=BLACK;
-                w.left.color=BLACK;
-                RightRotate(x.parent);
-                x=this.root;
-            }
-        }
-        x.color=BLACK;
-    }
-
-    private void RBDelete(Node z){
-        Node x,y=z;
-        Colors yCol=y.color;
-        if(z.left==null){
-            x=z.right;
-            RBTransplant(z,z.right);
-        } else if(z.right==null){
-            x=z.left;
-            RBTransplant(z,z.left);
-        } else {
-            y=TreeMinimum(z.right);
-            yCol=y.color;
-            x=y.right;
-            if (y.parent==z)
-                x.parent=y;
-            else{
-                RBTransplant(y,y.right);
-                y.right=z.right;
-                y.right.parent=y;
-            }
-            RBTransplant(z,y);
-            y.left=z.left;
-            y.left.parent=y;
-            y.color=z.color;
-        }
-        if(yCol==BLACK)
-            RBDeleteFixup(x);
-    }
-
     @Override
     public E first() {
-        return null;
+        if (isEmpty()) {
+            throw new NoSuchElementException("set is empty, no first element");
+        }
+        Node curr = root;
+        while (curr.left != NIL) {
+            curr = curr.left;
+        }
+        return curr.value;
     }
 
     @Override
     public E last() {
-        return null;
+        if (isEmpty()) {
+            throw new NoSuchElementException("set is empty, no last element");
+        }
+        Node curr = root;
+        while (curr.right != NIL) {
+            curr = curr.right;
+        }
+        return curr.value;
+    }
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return root == null;
     }
 
     @Override
@@ -249,7 +100,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
     }
 
     private void inorderTraverse(Node curr, List<E> list) {
-        if (curr == nil) {
+        if (curr == NIL) {
             return;
         }
         inorderTraverse(curr.left, list);
@@ -257,15 +108,28 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         inorderTraverse(curr.right, list);
     }
 
+//    public int getHeight() {
+//        return getHeight(root);
+//    } //****/
+//
+//    private int getHeight(Node node) { //****/
+//        if (node == null) return 0;
+//        return Math.max(getHeight(node.left), getHeight(node.right)) + 1;
+//    }
 
-    @Override
-    public int size() {
-        return 0;
+    public Node find(E value) {
+        return find(root, value);
     }
 
-    @Override
-    public boolean isEmpty() {
-        return root == null;
+    private Node find(Node curr, E val) {
+        if (curr == NIL || curr.value.equals(val)) {
+            return curr;
+        }
+        if (curr.value.compareTo(val) > 0) {
+            return find(curr.left, val);
+        } else {
+            return find(curr.right, val);
+        }
     }
 
     @Override
@@ -275,7 +139,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         }
         if (root != null) {
             Node curr = root;
-            while (curr != null) {
+            while (curr != NIL) {
                 int cmp = compare(curr.value, value);
                 if (cmp == 0) {
                     return true;
@@ -291,39 +155,133 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     @Override
     public boolean add(E value) {
+        Node z;
         if (value == null) {
             throw new NullPointerException("value is null");
         }
         if (root == null) {
             root = new Node(value);
+            root.isRed = false;
+            root.parent = NIL;
+            root.left = NIL;
+            root.right = NIL;
         } else {
-            Node z = new Node(value);
-            Node y = nil;
-            Node x = this.root;
-            int cmp;
-            while (x != nil) {
-                y = x;
-                cmp=compare(z.value, x.value);
-                if (cmp < 0)
-                    x = x.left;
-                else if(cmp == 0)
+            Node curr = root;
+            while (true) {
+                int cmp = compare(curr.value, value);
+                if (cmp == 0) {
                     return false;
-                else x = x.right;
+                } else if (cmp < 0) {
+                    if (curr.right != NIL) {
+                        curr = curr.right;
+                    } else {
+                        curr.right = new Node(value);
+                        curr.right.parent = curr;
+                        curr.right.left = NIL;
+                        curr.right.right = NIL;
+                        z = curr.right;
+                        break;
+                    }
+                } else if (cmp > 0) {
+                    if (curr.left != NIL) {
+                        curr = curr.left;
+                    } else {
+                        curr.left = new Node(value);
+                        curr.left.parent = curr;
+                        curr.left.left = NIL;
+                        curr.left.right = NIL;
+                        z = curr.left;
+                        break;
+                    }
+                }
             }
-            z.parent = y;
-            if (y == nil)
-                this.root = z;
-            else if (compare(z.value,y.value) < 0) {
-                y.left = z;
-            } else y.right = z;
-            z.left = nil;
-            z.right = nil;
-            z.color = RED;
-            RBInsertFixup(z);
+            AddFixUp(z);
         }
         size++;
         return true;
     }
+
+    public void AddFixUp(Node z) {
+        Node y;
+        while (z.parent.isRed == true) {
+            if (z.parent == z.parent.parent.left) {
+                y = z.parent.parent.right;
+                if (y.isRed == true) {
+                    z.parent.isRed = false;
+                    y.isRed = false;
+                    z.parent.parent.isRed = true;
+                    z = z.parent.parent;
+                } else if (z == z.parent.right) {
+                    z = z.parent;
+                    rotateLeft(z);
+                }
+                else {
+                    z.parent.isRed = false;
+                    if (compare(z.value, root.value) == 0) {
+                        root = z;
+                        break;
+                    }
+                    if (z.parent.parent != NIL) {
+                        z.parent.parent.isRed = true;
+                        rotateRight(z.parent.parent);
+                    }
+                }
+            } else {
+                y = z.parent.parent.left;
+                if (y.isRed == true) {
+                    z.parent.isRed = false;
+                    y.isRed = false;
+                    z.parent.parent.isRed = true;
+                    z = z.parent.parent;
+                } else if (z == z.parent.left) {
+                    z = z.parent;
+                    rotateRight(z);
+                }
+                else {
+                    z.parent.isRed = false;
+                    if (compare(z.value, root.value) == 0) {
+                        root = z;
+                        break;
+                    }
+                    if (z.parent.parent != NIL) {
+                        z.parent.parent.isRed = true;
+                        rotateLeft(z.parent.parent);
+                    }
+                }
+            }
+
+        }
+        root.isRed = false;
+    }
+
+    public void rotateLeft(Node x) {
+        Node y = x.right;
+        x.right = y.left;
+
+        if (y.left != NIL) y.left.parent = x;
+        y.parent = x.parent;
+        if (x.parent == NIL) root = y;
+        else if (x == x.parent.left) x.parent.left = y;
+        else x.parent.right = y;
+        y.left = x;
+
+        x.parent = y;
+    }
+
+    public void rotateRight(Node x) {
+        Node y = x.left;
+        x.left = y.right;
+
+        if (y.right != NIL) y.right.parent = x;
+        y.parent = x.parent;
+        if (x.parent == NIL) root = y;
+        else if (x == x.parent.left) x.parent.left = y;
+        else x.parent.right = y;
+        y.right = x;
+
+        x.parent = y;
+    }
+
 
     @Override
     public boolean remove(E value) {
@@ -333,88 +291,135 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         if (root == null) {
             return false;
         }
-        Node z=root;
-        Node parent=root;
+        Node parent = root;
+        Node curr = root;
+        Node aRemote;
+        boolean color;
         int cmp;
-        while ((cmp = compare(z.value, value)) != 0) {
-            parent = z;
+        while ((cmp = compare(curr.value, value)) != 0) {
+            parent = curr;
             if (cmp > 0) {
-                z = z.left;
+                curr = curr.left;
             } else {
-                z = z.right;
+                curr = curr.right;
             }
-            if (z == null) {
+            if (curr == NIL) {
                 return false; // ничего не нашли
             }
         }
-
-        Node x= nil;
-        Node y=z;
-        Colors yCol=y.color;
-        if(z.left==nil){
-            x=z.right;
-            RBTransplant(z,z.right);
-        } else if(z.right==nil){
-            x=z.left;
-            RBTransplant(z,z.left);
-        } else {
-            y=TreeMinimum(z.right);
-            yCol=y.color;
-            x=y.right;
-            if (y.parent==z)
-                x.parent=y;
-            else{
-                RBTransplant(y,y.right);
-                y.right=z.right;
-                y.right.parent=y;
+        if (curr.left != NIL && curr.right != NIL) {
+            Node next = curr.right;
+            Node pNext = curr;
+            while (next.left != NIL) {
+                pNext = next;
+                next = next.left;
+            } //next = наименьший из больших
+            curr.value = next.value;
+            next.value = null;
+            //у правого поддерева нет левых потомков
+            color=next.isRed;
+            if (pNext == curr) {
+                curr.right = next.right;
+            } else {
+                pNext.left = next.right;
             }
-            RBTransplant(z,y);
-            y.left=z.left;
-            y.left.parent=y;
-            y.color=z.color;
+            aRemote=next.right;
+            if (aRemote==NIL) {
+                aRemote.parent=pNext;
+            }
+            next.right = NIL;
+        } else {
+            color=curr.isRed;
+            if (curr.left != NIL) {
+                reLink(parent, curr, curr.left);
+                aRemote=curr.left;
+            } else if (curr.right != NIL) {
+                reLink(parent, curr, curr.right);
+                aRemote=curr.right;
+            } else {
+                reLink(parent, curr, NIL);
+                aRemote=NIL;
+            }
+            if (aRemote==NIL) {
+                aRemote.parent=parent;
+            }
         }
-        if(yCol==BLACK && (x!=nil))
-            RBDeleteFixup(x);
+        if (color==false) {
+            RemoveFixUp(aRemote);
+        }
+        if (root==NIL) root=null;
         size--;
         return true;
     }
 
-    private int compare(E v1, E v2) {
-        return comparator == null ? v1.compareTo(v2) : comparator.compare(v1, v2);
+    private void reLink(Node parent, Node curr, Node child) {
+        if (parent == curr) {
+            root = child;
+        } else if (parent.left == curr) {
+            parent.left = child;
+        } else {
+            parent.right = child;
+        }
+        child.parent=curr.parent;
+        curr.value = null;
     }
 
-    public static void main(String[] args) {
-        RedBlackTree<Integer> tree = new RedBlackTree<>();
-        tree.add(10);
-        tree.add(5);
-        tree.add(15);
-        tree.add(4);
-        System.out.println(tree.inorderTraverse());
-        System.out.println(tree.size);
-        System.out.println(tree.contains(10));
-        System.out.println(tree.inorderTraverse());
-        tree.remove(10);
-        tree.remove(15);
-        System.out.println(tree.size);
-        System.out.println(tree.inorderTraverse());
-        tree.remove(5);
-        System.out.println(tree.size);
-        System.out.println(tree.inorderTraverse());
-        tree.add(15);
-        System.out.println(tree.size);
-        System.out.println(tree.inorderTraverse());
+    public void RemoveFixUp(Node x) {
+        Node w;
+        while ( x!=root && x.isRed==false) {
+            if (x == x.parent.left) {
+                w = x.parent.right;
+                if (w.isRed == true) {
+                    w.isRed = false;
+                    x.parent.isRed = true;
+                    rotateLeft(x.parent);
+                    w = x.parent.right;
+                }
+                if (w.left.isRed == false && w.right.isRed == false) {
+                    w.isRed = true;
+                    x = x.parent;
+                } else if (w.right.isRed == false) {
+                    w.left.isRed = false;
+                    w.isRed = true;
+                    rotateRight(w);
+                    w = x.parent.right;
+                } else {
+                    w.isRed = x.parent.isRed;
+                    x.parent.isRed = false;
+                    w.right.isRed = false;
+                    rotateLeft(x.parent);
+                    x = root;
+                }
+            } else {
+                w = x.parent.left;
+                if (w.isRed == true) {
+                    w.isRed = false;
+                    x.parent.isRed = true;
+                    rotateRight(x.parent);
+                    w = x.parent.left;
+                }
+                if (w.left.isRed == false && w.right.isRed == false) {
+                    w.isRed = true;
+                    x = x.parent;
+                } else if (w.left.isRed == false) {
+                    w.right.isRed = false;
+                    w.isRed = true;
+                    rotateLeft(w);// *
+                    w = x.parent.left;
+                } else {
+                    w.isRed = x.parent.isRed;
+                    x.parent.isRed = false;
+                    w.left.isRed = false;
+                    rotateRight(x.parent);
+                    x = root;
+                }
+            }
+        }
+        x.isRed=false;
 
-        System.out.println("------------");
-        Random rnd = new Random();
-        tree = new RedBlackTree<>();
-        for (int i = 0; i < 15; i++) {
-            tree.add(rnd.nextInt(50));
-        }
-        System.out.println(tree.inorderTraverse());
-        tree = new RedBlackTree<>();
-        for (int i = 0; i < 15; i++) {
-            tree.add(rnd.nextInt(50));
-        }
-        System.out.println(tree.inorderTraverse());
+    }
+
+    private int compare(E v1, E v2) {
+        return comparator == null ? v1.compareTo(v2) : comparator.compare(v1, v2);
     }
 }

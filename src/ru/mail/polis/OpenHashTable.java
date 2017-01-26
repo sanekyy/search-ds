@@ -9,7 +9,6 @@ public class OpenHashTable<T extends Comparable<T>> implements ISet<T> {
     private final Entity REMOVED = new Entity<T>(null);
 
 
-
     private Entity<T>[] table;
 
     private int size;
@@ -75,7 +74,6 @@ public class OpenHashTable<T extends Comparable<T>> implements ISet<T> {
         int currIndex = 0;
 
         for(int i=0; true; i++){
-            System.out.println(currIndex);
             if(table[currIndex = indexFor(entity.value, i)]==null || table[currIndex] == REMOVED){
                 table[currIndex] = entity;
                 return true;
@@ -115,8 +113,21 @@ public class OpenHashTable<T extends Comparable<T>> implements ISet<T> {
         return false;
     }
 
+    private int hash(T value){
+        int hash = 5381;
+        byte num = (byte) value.hashCode();
+        int c = num++;
+
+        while (c!=0) {
+            hash = ((hash << 5) + hash) + c;
+            c = num++;
+        }
+
+        return hash;
+    }
+
     private int indexFor(T value, int attempt){
-        return (value.hashCode() + attempt) % capacity;
+        return Math.abs(value.hashCode() + attempt*hash(value)) % capacity;
     }
 
     class Entity<T> {
